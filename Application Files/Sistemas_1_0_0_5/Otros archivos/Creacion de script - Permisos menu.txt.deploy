@@ -1,0 +1,72 @@
+﻿//Load del menu
+CreacionScriptPermisos_Menu(oMenu); //oMenu = nombre del objeto menú
+System.IO.File.WriteAllLines("C:\\Users\\JAlbanez.LASALUDSO\\Desktop\\Permisos" + UtilidadesVariables.Sistema.Replace(" ","") + ".sql", permisos);
+//
+
+/// <summary>
+/// Metodo que construye el script de los permisos a base de las opciones principales que tiene el objeto menu que se recibe como parametro
+/// </summary>
+/// <param name="oMenu"></param>
+private void CreacionScriptPermisos_Menu(MenuStrip oMenu)
+{
+    try
+    {
+        int x = 0;
+        foreach (ToolStripMenuItem oOpcionMenu in oMenu.Items)
+        {
+            if (oOpcionMenu.DropDownItems.Count > 0)
+            {
+                permisos.Add("EXEC [Administracion].[spPermisosInsertarProc] @Id_Sistema= " + UtilidadesVariables.cSistema + ", @activo=1, @OpcionMenu='" + oOpcionMenu.Name.Replace("ToolStripMenuItem", "") + "', @DescripcionMenu = '" + oOpcionMenu.Text.Replace("&", "") + "', @UbicacionOpcion= 'Principal', @Id_OpcionPrincipal=" + (x + 1));
+                CreacionScriptPermisos_SubMenus(oOpcionMenu.DropDownItems, oOpcionMenu.Text.Replace("&", ""), x + 1);
+            }
+
+            x += 1;
+        }
+    }
+    catch (Exception ex)
+    {
+        util.MensajeError(ex.Message);
+    }
+}
+
+/// <summary>
+/// Metodo que construye el script de los permisos a base de las opciones de los submenus que tiene el objeto menu que se recibe como parametro
+/// </summary>
+/// <param name="oSubmenuItems"></param>
+/// <param name="nombreMenu"></param>
+/// <param name="idOpcionPrincipal"></param>
+/// <param name="esSubMenuItem"></param>
+
+private void CreacionScriptPermisos_SubMenus(ToolStripItemCollection oSubmenuItems, string nombreMenu, int idOpcionPrincipal, bool esSubMenuItem = false)
+{
+    try
+    {
+        foreach (ToolStripItem oSubitem in oSubmenuItems)
+        {
+            if (oSubitem is ToolStripMenuItem)
+            {
+                permisos.Add("EXEC [Administracion].[spPermisosInsertarProc] @Id_Sistema= " + UtilidadesVariables.cSistema + ", @activo=1, @OpcionMenu='" + oSubitem.Name.Replace("ToolStripMenuItem", "") + "', @DescripcionMenu = '" + oSubitem.Text.Replace("&", "") + "', @UbicacionOpcion= '" + nombreMenu + "', @Id_OpcionPrincipal=" + idOpcionPrincipal);
+                ToolStripMenuItem a = (ToolStripMenuItem)oSubitem;
+                foreach (ToolStripMenuItem submenu in a.DropDownItems)
+                {
+                    if (a.DropDownItems.Count > 0 && a.DropDownItems.Count > i)
+                        esSubMenuItem = true;
+                    else
+                        esSubMenuItem = false;
+
+                    i += 1;
+                }
+
+                i = 0;
+                if (esSubMenuItem == false)
+                    CreacionScriptPermisos_SubMenus(a.DropDownItems, nombreMenu, idOpcionPrincipal, esSubMenuItem);
+                else
+                    CreacionScriptPermisos_SubMenus(a.DropDownItems, nombreMenu + " >> " + oSubitem.Text.Replace("ToolStripMenuItem", ""), idOpcionPrincipal, esSubMenuItem);
+            }
+        }
+    }
+    catch (Exception ex)
+    {
+        util.MensajeError(ex.Message);
+    }
+}
